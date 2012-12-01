@@ -29,7 +29,8 @@ enum {
 #define wpa_hexdump_ascii_key(...)  do {} while (0)
 #define wpa_debug_open_file(...)    do {} while (0)
 #define wpa_debug_close_file()      do {} while (0)
-#define wpa_dbg(...)                do {} while (0)
+//#define wpa_dbg(...)                do {} while (0)
+#define wpa_dbg(args...) wpa_msg(args)
 
 static inline int wpa_debug_reopen_file(void)
 {
