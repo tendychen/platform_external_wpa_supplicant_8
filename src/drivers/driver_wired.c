@@ -25,6 +25,9 @@
 #include "common.h"
 #include "eloop.h"
 #include "driver.h"
+#include "common/ieee802_11_defs.h"
+
+#define DRIVER_CONFIG_FAKE_SSID "WiredSSID"
 
 #ifdef _MSC_VER
 #pragma pack(push, 1)
@@ -54,6 +57,8 @@ struct wpa_driver_wired_data {
 
 	int pf_sock;
 	int membership, multi, iff_allmulti, iff_up;
+
+	int associated;
 };
 
 
@@ -385,7 +390,7 @@ static void wired_driver_hapd_deinit(void *priv)
 
 static int wpa_driver_wired_get_ssid(void *priv, u8 *ssid)
 {
-	ssid[0] = 0;
+	strcpy(ssid, DRIVER_CONFIG_FAKE_SSID);
 	return 0;
 }
 
@@ -397,14 +402,14 @@ static int wpa_driver_wired_get_bssid(void *priv, u8 *bssid)
 	return 0;
 }
 
-
+#if 0
 static int wpa_driver_wired_get_capa(void *priv, struct wpa_driver_capa *capa)
 {
 	os_memset(capa, 0, sizeof(*capa));
 	capa->flags = WPA_DRIVER_FLAGS_WIRED;
 	return 0;
 }
-
+#endif
 
 static int wpa_driver_wired_get_ifflags(const char *ifname, int *flags)
 {
@@ -563,6 +568,8 @@ static void * wpa_driver_wired_init(void *ctx, const char *ifname)
 		drv->iff_allmulti = 1;
 	}
 
+	drv->associated = 0;
+
 	return drv;
 }
 
@@ -608,7 +615,114 @@ static void wpa_driver_wired_deinit(void *priv)
 	os_free(drv);
 }
 
+static int wpa_driver_wired_scan(void *priv,
+				struct wpa_driver_scan_params *params)
+{
+	struct wpa_driver_wired_data *drv = priv;
 
+	wpa_supplicant_event(drv->ctx, EVENT_SCAN_RESULTS, NULL);
+
+	return 0;
+}
+
+static struct wpa_scan_results * wpa_driver_wired_get_scan_results2(void *priv)
+{
+	struct wpa_scan_results *res;
+	struct wpa_scan_res *r;
+
+	res = os_zalloc(sizeof(*res));
+	if (res == NULL)
+		return NULL;
+
+	res->res = os_zalloc(1 * sizeof(struct wpa_scan_res *));
+	if (res->res == NULL) {
+		os_free(res);
+		return NULL;
+	}
+
+	r = os_malloc(sizeof(*r) + 2 + strlen(DRIVER_CONFIG_FAKE_SSID));
+	os_memset(r, 0, sizeof(*r));
+	r->flags = 0;
+	r->flags |= WPA_SCAN_QUAL_INVALID;
+	r->flags |= WPA_SCAN_NOISE_INVALID;
+	os_memcpy(r->bssid, pae_group_addr, ETH_ALEN);
+	r->freq = 2412;
+	r->beacon_int = 0;
+	r->caps = 0;
+	r->qual = 0;
+	r->noise = 0;
+	r->level = -55;
+	r->tsf = 0;
+	r->age = 0;
+	r->ie_len = 2+strlen(DRIVER_CONFIG_FAKE_SSID);
+	char *p = (char *)(r+1);
+	*p++ = (char)WLAN_EID_SSID;
+	*p++ = (char)strlen(DRIVER_CONFIG_FAKE_SSID);
+	memcpy(p, DRIVER_CONFIG_FAKE_SSID, strlen(DRIVER_CONFIG_FAKE_SSID));
+	p += strlen(DRIVER_CONFIG_FAKE_SSID);
+	r->beacon_ie_len = 0;
+	res->res[0] = r;
+	res->num = 1;
+
+
+	return res;
+}
+
+static int wpa_driver_wired_associate(
+	void *priv, struct wpa_driver_associate_params *params)
+{
+	struct wpa_driver_wired_data *drv = priv;
+
+	drv->associated = 1;
+	wpa_supplicant_event(drv->ctx, EVENT_ASSOC, NULL);
+
+	return 0;
+}
+
+static int wpa_driver_wired_disassociate(void *priv, const u8 *addr,
+					int reason_code)
+{
+	struct wpa_driver_wired_data *drv = priv;
+
+	drv->associated = 0;
+	wpa_supplicant_event(drv->ctx, EVENT_DISASSOC, NULL);
+
+	return 0;
+}
+
+int wpa_driver_wired_signal_poll(void *priv, struct wpa_signal_info *si)
+{
+	struct wpa_driver_wired_data *drv = priv;
+	static int ncalls=0;
+
+	os_memset(si, 0, sizeof(*si));
+
+	if (drv->associated) {
+		ncalls++;
+		if (ncalls<3)
+			si->current_signal = -65;
+		else
+			si->current_signal = -55;
+		si->current_txrate = 100;
+	}
+
+	return 0;
+}
+
+static int wpa_driver_wired_get_capa(void *priv, struct wpa_driver_capa *capa)
+{
+	struct wpa_driver_wired_data *drv = priv;
+
+	os_memset(capa, 0, sizeof(*capa));
+	capa->key_mgmt = WPA_DRIVER_CAPA_KEY_MGMT_WPA |
+		WPA_DRIVER_CAPA_KEY_MGMT_WPA_NONE;
+	capa->enc = 0;
+	capa->auth = WPA_DRIVER_AUTH_OPEN;
+	capa->max_scan_ssids = 1;
+	capa->max_remain_on_chan = 60000;
+
+	return 0;
+}
 const struct wpa_driver_ops wpa_driver_wired_ops = {
 	.name = "wired",
 	.desc = "Wired Ethernet driver",
@@ -620,4 +734,12 @@ const struct wpa_driver_ops wpa_driver_wired_ops = {
 	.get_capa = wpa_driver_wired_get_capa,
 	.init = wpa_driver_wired_init,
 	.deinit = wpa_driver_wired_deinit,
+	.scan2 = wpa_driver_wired_scan,
+	.get_scan_results2 = wpa_driver_wired_get_scan_results2,
+	.disassociate = wpa_driver_wired_disassociate,
+	.associate = wpa_driver_wired_associate,
+	.get_capa = wpa_driver_wired_get_capa,
+#ifdef ANDROID
+	.signal_poll = wpa_driver_wired_signal_poll,
+#endif
 };

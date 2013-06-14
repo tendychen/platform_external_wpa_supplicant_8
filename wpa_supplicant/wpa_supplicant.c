@@ -219,10 +219,10 @@ void wpa_supplicant_req_auth_timeout(struct wpa_supplicant *wpa_s,
 	    (wpa_s->drv_flags & WPA_DRIVER_FLAGS_WIRED))
 		return;
 
-	wpa_dbg(wpa_s, MSG_DEBUG, "Setting authentication timeout: %d sec "
+	wpa_msg(wpa_s, MSG_INFO, "Setting authentication timeout: %d sec "
 		"%d usec", sec, usec);
 	eloop_cancel_timeout(wpa_supplicant_timeout, wpa_s, NULL);
-	eloop_register_timeout(sec, usec, wpa_supplicant_timeout, wpa_s, NULL);
+	//eloop_register_timeout(sec, usec, wpa_supplicant_timeout, wpa_s, NULL);
 }
 
 
@@ -236,7 +236,7 @@ void wpa_supplicant_req_auth_timeout(struct wpa_supplicant *wpa_s,
  */
 void wpa_supplicant_cancel_auth_timeout(struct wpa_supplicant *wpa_s)
 {
-	wpa_dbg(wpa_s, MSG_DEBUG, "Cancelling authentication timeout");
+	wpa_msg(wpa_s, MSG_INFO, "Cancelling authentication timeout");
 	eloop_cancel_timeout(wpa_supplicant_timeout, wpa_s, NULL);
 	wpa_blacklist_del(wpa_s, wpa_s->bssid);
 }
@@ -991,7 +991,7 @@ int wpa_supplicant_set_suites(struct wpa_supplicant *wpa_s,
 			proto = ie.proto;
 	}
 
-	wpa_dbg(wpa_s, MSG_DEBUG, "WPA: Selected cipher suites: group %d "
+	wpa_msg(wpa_s, MSG_INFO, "WPA: Selected cipher suites: group %d "
 		"pairwise %d key_mgmt %d proto %d",
 		ie.group_cipher, ie.pairwise_cipher, ie.key_mgmt, proto);
 #ifdef CONFIG_IEEE80211W
@@ -1654,6 +1654,8 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
 		assoc_failed = 1;
 	}
 
+	wpa_msg(wpa_s, MSG_INFO, "Associate with key management = %d - comparing with WPA_NONE %d", wpa_s->key_mgmt, WPA_KEY_MGMT_WPA_NONE);
+
 	if (wpa_s->key_mgmt == WPA_KEY_MGMT_WPA_NONE) {
 		/* Set the key after the association just in case association
 		 * cleared the previously configured key. */
@@ -1683,6 +1685,7 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
 			/* give IBSS a bit more time */
 			timeout = ssid->mode == WPAS_MODE_IBSS ? 20 : 10;
 		}
+		wpa_msg(wpa_s, MSG_INFO, "Auth timeout 'coz 802.11, assoc_failed=%d ssid->mode=%d", assoc_failed, ssid->mode);
 		wpa_supplicant_req_auth_timeout(wpa_s, timeout, 0);
 	}
 
@@ -2290,6 +2293,7 @@ void wpa_supplicant_rx_eapol(void *ctx, const u8 *src_addr,
 	    (wpa_s->current_ssid == NULL ||
 	     wpa_s->current_ssid->mode != IEEE80211_MODE_IBSS)) {
 		/* Timeout for completing IEEE 802.1X and WPA authentication */
+		wpa_msg(wpa_s, MSG_INFO, "Auth timeout 'coz !eapol");
 		wpa_supplicant_req_auth_timeout(
 			wpa_s,
 			(wpa_key_mgmt_wpa_ieee8021x(wpa_s->key_mgmt) ||
