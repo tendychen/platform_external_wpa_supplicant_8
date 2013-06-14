@@ -691,7 +691,7 @@ wpa_supplicant_global_ctrl_iface_init(struct wpa_global *global)
 		goto havesock;
 #endif /* ANDROID */
 
-	wpa_printf(MSG_DEBUG, "Global control interface '%s'",
+	wpa_printf(MSG_INFO, "Global control interface '%s'",
 		   global->params.ctrl_interface);
 
 	priv->sock = socket(PF_UNIX, SOCK_DGRAM, 0);
