@@ -620,6 +620,7 @@ static int wpa_driver_wired_scan(void *priv,
 {
 	struct wpa_driver_wired_data *drv = priv;
 
+	wpa_msg(drv->ctx, MSG_INFO, "wpa_driver_wired_scan()");
 	wpa_supplicant_event(drv->ctx, EVENT_SCAN_RESULTS, NULL);
 
 	return 0;
@@ -629,6 +630,9 @@ static struct wpa_scan_results * wpa_driver_wired_get_scan_results2(void *priv)
 {
 	struct wpa_scan_results *res;
 	struct wpa_scan_res *r;
+	struct wpa_driver_wired_data *drv = priv;
+
+	wpa_msg(drv->ctx, MSG_INFO, "wpa_driver_wired_scan_results2()");
 
 	res = os_zalloc(sizeof(*res));
 	if (res == NULL)
@@ -647,7 +651,7 @@ static struct wpa_scan_results * wpa_driver_wired_get_scan_results2(void *priv)
 	r->flags |= WPA_SCAN_NOISE_INVALID;
 	os_memcpy(r->bssid, pae_group_addr, ETH_ALEN);
 	r->freq = 2412;
-	r->beacon_int = 0;
+	r->beacon_int = IEEE80211_CAP_ESS;
 	r->caps = 0;
 	r->qual = 0;
 	r->noise = 0;
@@ -675,17 +679,6 @@ static int wpa_driver_wired_associate(
 
 	drv->associated = 1;
 	wpa_supplicant_event(drv->ctx, EVENT_ASSOC, NULL);
-
-	return 0;
-}
-
-static int wpa_driver_wired_disassociate(void *priv, const u8 *addr,
-					int reason_code)
-{
-	struct wpa_driver_wired_data *drv = priv;
-
-	drv->associated = 0;
-	wpa_supplicant_event(drv->ctx, EVENT_DISASSOC, NULL);
 
 	return 0;
 }
@@ -736,7 +729,6 @@ const struct wpa_driver_ops wpa_driver_wired_ops = {
 	.deinit = wpa_driver_wired_deinit,
 	.scan2 = wpa_driver_wired_scan,
 	.get_scan_results2 = wpa_driver_wired_get_scan_results2,
-	.disassociate = wpa_driver_wired_disassociate,
 	.associate = wpa_driver_wired_associate,
 	.get_capa = wpa_driver_wired_get_capa,
 #ifdef ANDROID

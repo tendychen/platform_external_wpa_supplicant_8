@@ -1630,7 +1630,7 @@ void wpa_supplicant_associate(struct wpa_supplicant *wpa_s,
 		((freq = wpa_drv_shared_freq(wpa_s)) > 0) && (freq != params.freq)) {
 		wpa_printf(MSG_DEBUG, "Shared interface with conflicting frequency found (%d != %d)"
 																, freq, params.freq);
-		if (wpas_p2p_handle_frequency_conflicts(wpa_s, params.freq, ssid) < 0) 
+		if (wpas_p2p_handle_frequency_conflicts(wpa_s, params.freq, ssid) < 0)
 			return;
 	}
 #endif
@@ -1896,7 +1896,10 @@ void wpa_supplicant_select_network(struct wpa_supplicant *wpa_s,
 	struct wpa_ssid *other_ssid;
 	int disconnected = 0;
 
+	wpa_msg(wpa_s, MSG_INFO, "wpa_supplicant_select_network");
+
 	if (ssid && ssid != wpa_s->current_ssid && wpa_s->current_ssid) {
+		wpa_msg(wpa_s, MSG_INFO, "wpa_supplicant_select_network: deauthenticate");
 		wpa_supplicant_deauthenticate(
 			wpa_s, WLAN_REASON_DEAUTH_LEAVING);
 		disconnected = 1;
@@ -1925,7 +1928,7 @@ void wpa_supplicant_select_network(struct wpa_supplicant *wpa_s,
 
 	if (ssid && ssid == wpa_s->current_ssid && wpa_s->current_ssid) {
 		/* We are already associated with the selected network */
-		wpa_printf(MSG_DEBUG, "Already associated with the "
+		wpa_msg(wpa_s, MSG_INFO, "Already associated with the "
 			   "selected network - do nothing");
 		return;
 	}
@@ -1936,8 +1939,11 @@ void wpa_supplicant_select_network(struct wpa_supplicant *wpa_s,
 	wpa_s->disconnected = 0;
 	wpa_s->reassociate = 1;
 
-	if (wpa_supplicant_fast_associate(wpa_s) != 1)
+	if (wpa_supplicant_fast_associate(wpa_s) != 1) {
+		wpa_msg(wpa_s, MSG_INFO, "wpa_supplicant_fast_associate != 1");
 		wpa_supplicant_req_scan(wpa_s, 0, disconnected ? 100000 : 0);
+        } else
+		wpa_msg(wpa_s, MSG_INFO, "wpa_supplicant_fast_associate == 1");
 
 	if (ssid)
 		wpas_notify_network_selected(wpa_s, ssid);

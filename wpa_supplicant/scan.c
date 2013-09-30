@@ -1542,8 +1542,8 @@ static void filter_scan_res(struct wpa_supplicant *wpa_s,
 	}
 
 	if (res->num != j) {
-		wpa_printf(MSG_DEBUG, "Filtered out %d scan results",
-			   (int) (res->num - j));
+		wpa_msg(wpa_s, MSG_DEBUG, "Filtered out %d scan results",
+			(int) (res->num - j));
 		res->num = j;
 	}
 }
