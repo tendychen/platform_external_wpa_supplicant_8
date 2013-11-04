@@ -581,13 +581,14 @@ static void wpa_supplicant_scan(void *eloop_ctx, void *timeout_ctx)
 		return;
 	}
 
+	/*
 	if (wpa_s->conf->ap_scan != 0 &&
 	    (wpa_s->drv_flags & WPA_DRIVER_FLAGS_WIRED)) {
 		wpa_dbg(wpa_s, MSG_DEBUG, "Using wired authentication - "
 			"overriding ap_scan configuration");
 		wpa_s->conf->ap_scan = 0;
 		wpas_notify_ap_scan_changed(wpa_s);
-	}
+	}*/
 
 	if (wpa_s->conf->ap_scan == 0) {
 		wpa_supplicant_gen_assoc_event(wpa_s);
@@ -1596,8 +1597,8 @@ static void filter_scan_res(struct wpa_supplicant *wpa_s,
 	}
 
 	if (res->num != j) {
-		wpa_printf(MSG_DEBUG, "Filtered out %d scan results",
-			   (int) (res->num - j));
+		wpa_msg(wpa_s, MSG_DEBUG, "Filtered out %d scan results",
+			(int) (res->num - j));
 		res->num = j;
 	}
 }

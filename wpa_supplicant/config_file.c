@@ -1068,11 +1068,11 @@ int wpa_config_write(const char *name, struct wpa_config *config)
 #endif /* CONFIG_NO_CONFIG_BLOBS */
 	int ret = 0;
 
-	wpa_printf(MSG_DEBUG, "Writing configuration file '%s'", name);
+	wpa_printf(MSG_INFO, "Writing configuration file '%s'", name);
 
 	f = fopen(name, "w");
 	if (f == NULL) {
-		wpa_printf(MSG_DEBUG, "Failed to open '%s' for writing", name);
+		wpa_printf(MSG_INFO, "Failed to open '%s' for writing", name);
 		return -1;
 	}
 
@@ -1105,7 +1105,7 @@ int wpa_config_write(const char *name, struct wpa_config *config)
 
 	fclose(f);
 
-	wpa_printf(MSG_DEBUG, "Configuration file '%s' written %ssuccessfully",
+	wpa_printf(MSG_INFO, "Configuration file '%s' written %ssuccessfully",
 		   name, ret ? "un" : "");
 	return ret;
 #else /* CONFIG_NO_CONFIG_WRITE */

@@ -2623,17 +2623,17 @@ static int wpa_supplicant_ctrl_iface_save_config(struct wpa_supplicant *wpa_s)
 	int ret;
 
 	if (!wpa_s->conf->update_config) {
-		wpa_printf(MSG_DEBUG, "CTRL_IFACE: SAVE_CONFIG - Not allowed "
+		wpa_printf(MSG_INFO, "CTRL_IFACE: SAVE_CONFIG - Not allowed "
 			   "to update configuration (update_config=0)");
 		return -1;
 	}
 
 	ret = wpa_config_write(wpa_s->confname, wpa_s->conf);
 	if (ret) {
-		wpa_printf(MSG_DEBUG, "CTRL_IFACE: SAVE_CONFIG - Failed to "
+		wpa_printf(MSG_INFO, "CTRL_IFACE: SAVE_CONFIG - Failed to "
 			   "update configuration");
 	} else {
-		wpa_printf(MSG_DEBUG, "CTRL_IFACE: SAVE_CONFIG - Configuration"
+		wpa_printf(MSG_INFO, "CTRL_IFACE: SAVE_CONFIG - Configuration"
 			   " updated");
 	}
 
