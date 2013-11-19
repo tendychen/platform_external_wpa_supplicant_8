@@ -27,6 +27,8 @@
 #include "driver.h"
 #include "common/ieee802_11_defs.h"
 
+#include <cutils/properties.h>
+
 #define DRIVER_CONFIG_FAKE_SSID "WiredSSID"
 
 #ifdef _MSC_VER
@@ -723,6 +725,17 @@ static int wpa_driver_wired_get_capa(void *priv, struct wpa_driver_capa *capa)
 
 	return 0;
 }
+
+static int wpa_driver_wired_driver_cmd( void *priv, char *cmd, char *buf, size_t buf_len )
+{
+    if (os_strcasecmp(cmd, "MACADDR") == 0) {
+        char str_macaddr[PROPERTY_VALUE_MAX] = "55:55:55:55:55:55";
+        property_get("wifi.interface.mac", str_macaddr, "12:34:56:78:9a:bc");
+        return os_snprintf(buf, buf_len, "Macaddr = %s\n", str_macaddr);
+    }
+    return -1;
+}
+
 const struct wpa_driver_ops wpa_driver_wired_ops = {
 	.name = "wired",
 	.desc = "Wired Ethernet driver",
@@ -739,6 +752,7 @@ const struct wpa_driver_ops wpa_driver_wired_ops = {
 	.disassociate = wpa_driver_wired_disassociate,
 	.associate = wpa_driver_wired_associate,
 	.get_capa = wpa_driver_wired_get_capa,
+        .driver_cmd = wpa_driver_wired_driver_cmd,
 #ifdef ANDROID
 	.signal_poll = wpa_driver_wired_signal_poll,
 #endif
