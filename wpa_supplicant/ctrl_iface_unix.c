@@ -150,8 +150,11 @@ static void wpa_supplicant_ctrl_iface_receive(int sock, void *eloop_ctx,
 	res = recvfrom(sock, buf, sizeof(buf) - 1, 0,
 		       (struct sockaddr *) &from, &fromlen);
 	if (res < 0) {
-		wpa_printf(MSG_ERROR, "recvfrom(ctrl_iface): %s",
-			   strerror(errno));
+		// XXX: Just hide this error for now:
+                // SIGNAL_POLL message trig the reading on the same interface (eth1)
+                // twice causing read to fail after the global interface read.
+		// wpa_printf(MSG_ERROR, "recvfrom(ctrl_iface): %s",
+		//		   strerror(errno));
 		return;
 	}
 	buf[res] = '\0';
